@@ -8,6 +8,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:lost_found/constant.dart';
+import 'package:lost_found/models/comment_model.dart';
 import 'package:lost_found/screens/post/save_post_screen.dart';
 import 'package:lost_found/utils/firebase_constants.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -90,17 +91,19 @@ class _SocialHomeScreenState extends State<SocialHomeScreen> {
 
     if (text.isNotEmpty) {
       try {
+        CommentModel comment = CommentModel(
+            commentId: "",
+            commentText: text,
+            userId: userId!,
+            date: date,
+            time: Timestamp.fromDate(date),
+            profileImage: loggedInUser.profileImageReference!,
+            replies: []);
         await FirebaseFirestore.instance
             .collection('posts')
             .doc(postId)
             .collection('comments')
-            .add({
-          'text': text,
-          'user_id': userId,
-          'date': date,
-          'time': Timestamp.fromDate(date),
-          'profileImage': loggedInUser.profileImageReference
-        });
+            .add(comment.toMap());
         _commentController.clear();
       } catch (error) {
         print('Error adding comment: $error');

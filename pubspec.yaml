@@ -55,7 +55,7 @@ dependencies:
 
   timeago: ^3.5.0
   visibility_detector: ^0.4.0+2
-  uuid: ^4.0.0
+  uuid: ^4.3.3
   get: ^4.6.6
 dev_dependencies:
   flutter_test:

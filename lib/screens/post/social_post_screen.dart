@@ -13,7 +13,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lost_found/utils/firebase_constants.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../models/posts_model.dart';
 import '../../models/user_model.dart';
 
 class PostScreen extends StatefulWidget {
@@ -187,6 +189,13 @@ class _PostScreenState extends State<PostScreen> {
       //     croppedImages.add(croppedFile);
       //   }
       // }
+      // for (var pickedFile in pickedFiles) {
+      //   File file = File(pickedFile.path);
+      //   CroppedFile? croppedFile = await _cropImage(file);
+      //   if (croppedFile != null) {
+      //     croppedImages.add(croppedFile);
+      //   }
+      // }
 
       //convert cropped images to XFile
       // pickedFiles = [];
@@ -286,10 +295,21 @@ class _PostScreenState extends State<PostScreen> {
     userModel.likes = [];
     userModel.uid = FirebaseAuth.instance.currentUser?.uid;
 
+    var post = PostsModel(
+        description: descriptionController.text,
+        likes: [],
+        postId: const Uuid().v1(),
+        postImages: images,
+        postImage: null,
+        profileImage: loggedInUser.profileImageReference,
+        timestamp: DateTime.now(),
+        userId: loggedInUser.uid,
+        view: 0);
+
     await firebaseFirestore
         .collection(loggedInUser.role == "admin" ? "admin_post" : "posts")
-        .doc()
-        .set(userModel.toMapPost());
+        .doc(post.postId)
+        .set(post.toMap());
     descriptionController.text = '';
     setState(() {
       imageFile = null;
