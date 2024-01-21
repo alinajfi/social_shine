@@ -72,25 +72,25 @@ class CommentModel {
 class CommentReplies {
   final String replierId;
   final String text;
+  final String replierName;
 
   CommentReplies({
     required this.replierId,
     required this.text,
+    required this.replierName,
   });
 
   CommentReplies.fromMap(Map<String, dynamic> map)
       : replierId = map['replierId'],
-        text = map['text'];
+        text = map['text'],
+        replierName = map["replierName"];
 
   Map<String, dynamic> toMap() {
-    return {
-      'replierId': replierId,
-      'text': text,
-    };
+    return {'replierId': replierId, 'text': text, "replierName": replierName};
   }
 
   @override
   String toString() {
-    return 'CommentReplies{replierId: $replierId, text: $text}';
+    return 'CommentReplies{replierId: $replierId, text: $text,replierName:$replierName}';
   }
 }

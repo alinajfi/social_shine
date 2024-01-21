@@ -295,6 +295,8 @@ class _PostScreenState extends State<PostScreen> {
     userModel.likes = [];
     userModel.uid = FirebaseAuth.instance.currentUser?.uid;
 
+    log(loggedInUser.uid.toString());
+
     var post = PostsModel(
         description: descriptionController.text,
         likes: [],
@@ -303,7 +305,7 @@ class _PostScreenState extends State<PostScreen> {
         postImage: null,
         profileImage: loggedInUser.profileImageReference,
         timestamp: DateTime.now(),
-        userId: loggedInUser.uid,
+        userId: FirebaseAuth.instance.currentUser!.uid,
         view: 0);
 
     await firebaseFirestore
@@ -324,16 +326,19 @@ class _PostScreenState extends State<PostScreen> {
   User? user = FirebaseAuth.instance.currentUser;
   UserModel loggedInUser = UserModel();
 
-  @override
-  void initState() {
-    super.initState();
+  getLoggedInUser() {
     FirebaseFirestore.instance
         .collection("users")
         .doc(user!.uid)
         .get()
         .then((value) {
       loggedInUser = UserModel.fromMapUserRegistration(value.data());
-      setState(() {});
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getLoggedInUser();
   }
 }

@@ -1,6 +1,7 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
+import 'package:lost_found/screens/home/posts_screen.dart';
 import 'package:lost_found/screens/profile/profile_screen.dart';
 import 'package:lost_found/screens/home/social_home_screen.dart';
 import 'package:lost_found/screens/post/social_post_screen.dart';
@@ -76,7 +77,7 @@ class _BottomNavigationBarExampleState
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static final List<Widget> _widgetOptions = <Widget>[
-    const SocialHomeScreen(),
+    const PostsScreen(),
     const PostScreen(),
     const ProfileScreen(),
   ];

@@ -29,6 +29,7 @@ class UserModel {
 
   factory UserModel.fromMapUserRegistration(map) {
     return UserModel(
+      uid: map["userId"],
       email: map['email'] ?? 'email',
       password: map['password'],
       profileImageReference: map['profileImage'],
@@ -40,6 +41,7 @@ class UserModel {
 
   Map<String, dynamic> toMapUserRegistration() {
     return {
+      "userId": uid,
       'email': email,
       'password': password,
       'fullName': fullName,

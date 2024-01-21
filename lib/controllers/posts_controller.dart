@@ -13,7 +13,10 @@ import "package:uuid/uuid.dart";
 class PostsController extends GetxController {
   Future<void> deletePost(String postId) async {
     try {
-      await FirebaseFirestore.instance.collection('posts').doc(postId).delete();
+      await FirebaseFirestore.instance
+          .collection(FirebaseConstants.postsCollection)
+          .doc(postId)
+          .delete();
     } catch (error) {
       log('Error deleting post: $error');
     }
@@ -22,11 +25,11 @@ class PostsController extends GetxController {
   Future<void> deleteAdminPost(String postId) async {
     try {
       await FirebaseFirestore.instance
-          .collection('admin_post')
+          .collection(FirebaseConstants.adminPostsCollection)
           .doc(postId)
           .delete();
     } catch (error) {
-      log('Error deleting post: $error');
+      log('Error deleting amin  post: $error');
     }
   }
 
@@ -100,16 +103,26 @@ class PostsController extends GetxController {
   Future<String> likePostForAdmin(String postId, String uid, List likes) async {
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
 
+    log(postId);
+    log(uid);
+    log(likes.toString());
+
     String res = "Some error occurred";
     try {
       if (likes.contains(uid)) {
         // if the likes list contains the user uid, we need to remove it
-        firebaseFirestore.collection('admin_post').doc(postId).update({
+        firebaseFirestore
+            .collection(FirebaseConstants.adminPostsCollection)
+            .doc(postId)
+            .update({
           'likes': FieldValue.arrayRemove([uid])
         });
       } else {
         // else we need to add uid to the likes array
-        firebaseFirestore.collection('posts').doc(postId).update({
+        firebaseFirestore
+            .collection(FirebaseConstants.adminPostsCollection)
+            .doc(postId)
+            .update({
           'likes': FieldValue.arrayUnion([uid])
         });
       }
@@ -144,9 +157,9 @@ class PostsController extends GetxController {
 
   // getComments
   Stream<QuerySnapshot<Map<String, dynamic>>> getCommentsForPost(
-      String postId) {
+      String postId, bool isAdmin) {
     return FirebaseFirestore.instance
-        .collection('posts')
+        .collection(isAdmin ? FirebaseConstants.adminPostsCollection : 'posts')
         .doc(postId)
         .collection(FirebaseConstants.commmentsCollection)
         .orderBy('time', descending: true)
@@ -187,7 +200,7 @@ class PostsController extends GetxController {
   }
 
   // Function to add a comment to the post
-  Future<void> addComment(String postId, String comment) async {
+  Future<void> addComment(String postId, String comment, bool isAdmin) async {
     final text = commentController.text.trim();
     final userId = FirebaseAuth
         .instance.currentUser!.uid; // Replace with the actual user ID
@@ -204,7 +217,8 @@ class PostsController extends GetxController {
             profileImage: loggedInUser.profileImageReference!,
             replies: []);
         await FirebaseFirestore.instance
-            .collection('posts')
+            .collection(
+                isAdmin ? FirebaseConstants.adminPostsCollection : 'posts')
             .doc(postId)
             .collection('comments')
             .doc(comment.commentId)
@@ -216,14 +230,17 @@ class PostsController extends GetxController {
     }
   }
 
-  Future<void> replyToAComment(String postID, String commentId) async {
+  Future<void> replyToAComment(
+      String postID, String commentId, bool isAdmin) async {
+    getLoggedInUser();
     final text = commentController.text.trim();
     final userId = FirebaseAuth.instance.currentUser!.uid;
 
     if (text.isNotEmpty) {
       try {
         var fetechedData = await FirebaseFirestore.instance
-            .collection('posts')
+            .collection(
+                isAdmin ? FirebaseConstants.adminPostsCollection : 'posts')
             .doc(postID)
             .collection('comments')
             .doc(commentId)
@@ -235,11 +252,15 @@ class PostsController extends GetxController {
             CommentModel.fromMap(fetechedData.data() as Map<String, dynamic>);
 
         var commentsList = fetchedComment.replies;
-        commentsList.add(CommentReplies(replierId: userId, text: text));
+        commentsList.add(CommentReplies(
+            replierId: userId,
+            text: text,
+            replierName: loggedInUser.fullName ?? ""));
 
         fetchedComment.copyWith(replies: commentsList);
         await FirebaseFirestore.instance
-            .collection('posts')
+            .collection(
+                isAdmin ? FirebaseConstants.adminPostsCollection : 'posts')
             .doc(postID)
             .collection('comments')
             .doc(commentId)
@@ -260,7 +281,8 @@ class PostsController extends GetxController {
     });
   }
 
-  void showCommentInputSheet(String postId, BuildContext context) {
+  void showCommentInputSheet(
+      String postId, BuildContext context, bool isAdmin) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -272,13 +294,14 @@ class PostsController extends GetxController {
               TextField(
                 controller: commentController,
                 decoration: const InputDecoration(labelText: 'Add a Comment'),
-                onSubmitted: (_) => addComment(postId, commentController.text),
+                onSubmitted: (_) =>
+                    addComment(postId, commentController.text, isAdmin),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  addComment(postId, commentController.text);
+                  addComment(postId, commentController.text, isAdmin);
                 },
                 child: const Text('Add Comment'),
               ),
@@ -290,7 +313,7 @@ class PostsController extends GetxController {
   }
 
   void showCommentReplySheet(
-      String postId, BuildContext context, String commentId) {
+      String postId, BuildContext context, String commentId, bool isAdmin) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -302,13 +325,13 @@ class PostsController extends GetxController {
               TextField(
                 controller: commentController,
                 decoration: const InputDecoration(labelText: 'Add a reply'),
-                onSubmitted: (_) => replyToAComment(postId, commentId),
+                onSubmitted: (_) => replyToAComment(postId, commentId, isAdmin),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  replyToAComment(postId, commentId);
+                  replyToAComment(postId, commentId, isAdmin);
                   commentController.clear();
                 },
                 child: const Text('Add Comment'),

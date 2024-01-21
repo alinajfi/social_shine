@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lost_found/controllers/posts_controller.dart';
 import 'package:lost_found/models/posts_model.dart';
 import 'package:lost_found/screens/home/widgets/post_widget.dart';
@@ -22,7 +24,11 @@ class PostsScreen extends GetView<PostsController> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("Admin posts"),
+                  Text(
+                    "Admin posts",
+                    style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600, fontSize: 20),
+                  ),
                   const SizedBox(
                     height: 20,
                   ),
@@ -38,7 +44,7 @@ class PostsScreen extends GetView<PostsController> {
                           for (var e in data) {
                             posts.add(PostsModel.fromMap(e.data()));
                           }
-                          return _adminPosts(height, width, posts);
+                          return _adminPosts(height, width, posts, true);
                         }
                         return const Text("No Posts found");
                       }
@@ -47,7 +53,11 @@ class PostsScreen extends GetView<PostsController> {
                   const SizedBox(
                     height: 20,
                   ),
-                  const Text("User posts"),
+                  Text(
+                    "User posts",
+                    style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600, fontSize: 20),
+                  ),
                   StreamBuilder(
                     stream: controller.getPosts(),
                     builder: (context, snapshot) {
@@ -60,7 +70,7 @@ class PostsScreen extends GetView<PostsController> {
                           for (var e in data) {
                             posts.add(PostsModel.fromMap(e.data()));
                           }
-                          return _adminPosts(height, width, posts);
+                          return _adminPosts(height, width, posts, false);
                         }
                         return const Text("No Posts found");
                       }
@@ -75,7 +85,8 @@ class PostsScreen extends GetView<PostsController> {
     );
   }
 
-  _adminPosts(double height, double width, List<PostsModel> posts) {
+  _adminPosts(
+      double height, double width, List<PostsModel> posts, bool isAdmin) {
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -86,10 +97,12 @@ class PostsScreen extends GetView<PostsController> {
             SizedBox(
               height: height * 0.45,
               width: width,
-              child: PostWidget(post: posts[index], controller: controller),
+              child: PostWidget(
+                  post: posts[index], controller: controller, isAdmin: isAdmin),
             ),
             StreamBuilder(
-                stream: controller.getCommentsForPost(posts[index].postId!),
+                stream: controller.getCommentsForPost(
+                    posts[index].postId!, isAdmin),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const CircularProgressIndicator.adaptive();
@@ -113,7 +126,8 @@ class PostsScreen extends GetView<PostsController> {
                               width,
                               posts[index].postId!,
                               e.commentId,
-                              context))
+                              context,
+                              isAdmin))
                           .toList(),
                     );
                   }
@@ -139,8 +153,14 @@ class PostsScreen extends GetView<PostsController> {
   //       itemCount: 20);
   // }
 
-  Widget commentsUi(String mainComment, List<CommentReplies> replies,
-      double width, String postId, String commentId, BuildContext context) {
+  Widget commentsUi(
+      String mainComment,
+      List<CommentReplies> replies,
+      double width,
+      String postId,
+      String commentId,
+      BuildContext context,
+      bool isAdmin) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -159,7 +179,7 @@ class PostsScreen extends GetView<PostsController> {
                   child: TextButton(
                       onPressed: () {
                         controller.showCommentReplySheet(
-                            postId, context, commentId);
+                            postId, context, commentId, isAdmin);
                       },
                       child: const Text("reply"))),
             ],
@@ -169,7 +189,8 @@ class PostsScreen extends GetView<PostsController> {
               : ExpansionTile(
                   controlAffinity: ListTileControlAffinity.platform,
                   trailing: const Text("view all replies"),
-                  title: Text(replies.first.text),
+                  title: Text(
+                      "@${replies.first.replierName}${replies.first.text}"),
                   children: [
                     Container(
                       padding: const EdgeInsets.only(left: 30),
@@ -178,7 +199,8 @@ class PostsScreen extends GetView<PostsController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           for (int i = 1; i < replies.length; i++)
-                            Text(replies[i].text)
+                            Text(
+                                "@ ${replies[i].replierName}${replies[i].text}")
                         ],
                       ),
                     )
